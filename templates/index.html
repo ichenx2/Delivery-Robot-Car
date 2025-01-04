@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delivery Robot Car</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 50px;
+        }
+        h1 {
+            color: #333;
+        }
+        .control-panel {
+            display: inline-block;
+            text-align: center;
+            margin-top: 20px;
+        }
+        .control-panel button {
+            width: 100px;
+            height: 50px;
+            margin: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            color: white;
+            background-color: #81BFDA;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .control-panel button:hover {
+            background-color: #6FAFC6;
+        }
+        .stop-button {
+            background-color: #F08080;
+        }
+        .stop-button:hover {
+            background-color: #e57373;
+        }
+        .status {
+            margin-top: 30px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .battery {
+            margin-top: 20px;
+            font-size: 16px;
+            color: #4CAF50;
+        }
+    </style>
+</head>
+<body>
+    <h1>Control Interface</h1>
+    <div class="control-panel">
+        <!-- Forward button -->
+        <form action="/forward" method="post">
+            <button type="submit">Forward</button>
+        </form>
+        <!-- Left turn button -->
+        <form action="/left" method="post" style="display: inline-block;">
+            <button type="submit">Left</button>
+        </form>
+        <!-- Stop button -->
+        <form action="/stop" method="post" style="display: inline-block;">
+            <button type="submit" class="stop-button">Stop</button>
+        </form>
+        <!-- Right turn button -->
+        <form action="/right" method="post" style="display: inline-block;">
+            <button type="submit">Right</button>
+        </form>
+        <!-- Backward button -->
+        <form action="/backward" method="post">
+            <button type="submit">Backward</button>
+        </form>
+    </div>
+    <div class="status" id="status">
+        No item placed
+    </div>
+    <div class="battery" id="battery">
+        Battery status: Calculating...
+    </div>
+
+    <script>
+        
+        // AJAX button functionality
+        document.querySelectorAll('form').forEach(form => {
+            form.addEventListener('submit', event => {
+                event.preventDefault(); // Prevent default form submission
+                const action = form.getAttribute('action'); // Get the target URL
+                fetch(action, { method: 'POST' })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'error') {
+                            alert(data.message); // Display error alert
+                        } else if (data.status === 'success') {
+                            console.log(data.message); // Log success message to console
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+            });
+        });
+    
+    
+        let lastStatus = "";
+        let lastAlert = ""; // Store the last alert content
+
+        // Use AJAX to update weight detection status in real-time
+        function updateStatus() {
+            fetch('/status')
+                .then(response => response.json())
+                .then(data => {
+                    // Update status display
+                    if (data.status && data.status !== lastStatus) {
+                        document.getElementById('status').innerText = data.status;
+                        lastStatus = data.status; // Update the last displayed status
+                    }
+                    
+                    if (data.alert && data.alert !== lastAlert) {
+                        alert(data.alert);
+                        lastAlert = data.alert; // Update the last alert content
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        // Update status every 1 second
+        setInterval(updateStatus, 1000);
+        
+        
+        function updateBatteryStatus() {
+            fetch('/battery')
+                .then(response => response.json())
+                .then(data => {
+                    const batteryDiv = document.getElementById('battery');
+                    if (data.voltage && data.percent !== undefined) {
+                        batteryDiv.innerText = `Battery: ${data.percent}% (${data.voltage} V)`;
+                    } else if (data.error) {
+                        batteryDiv.innerText = `Battery: Unable to read (Error: ${data.error})`;
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('battery').innerText = `Battery: Failed to read`;
+                    console.error('Error fetching battery information:', error);
+                });
+        }
+
+        // Update battery status every 5 seconds
+        setInterval(updateBatteryStatus, 5000);
+        updateBatteryStatus(); // Initial load update
+        
+    </script>
+</body>
+</html>
