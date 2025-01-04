@@ -1,4 +1,4 @@
-# Delivery Robot Car Project
+# Delivery Robot Car
 
 This repository contains the full source code for the Delivery Robot Car project, built using a Raspberry Pi 4B. The project integrates motor control, ultrasonic sensors for collision avoidance, and a weight sensor for object detection.
 
